@@ -1,0 +1,8 @@
+fire
+tqdm
+librosa
+numpy
+einops
+kornia
+torch
+torchvision
