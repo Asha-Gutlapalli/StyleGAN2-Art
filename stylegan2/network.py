@@ -4,6 +4,7 @@ import json
 
 import numpy as np
 
+from tqdm import tqdm
 from functools import partial
 import multiprocessing
 
@@ -443,7 +444,7 @@ class Trainer():
         results_dir = 'results',
         models_dir = 'models',
         base_dir = './',
-        image_size = 128,
+        image_size = 512,
         network_capacity = 16,
         fmap_max = 512,
         transparent = False,
@@ -741,7 +742,7 @@ class Trainer():
             self.save(self.checkpoint_num)
 
         # saves intermediate results periodically
-        if self.steps % self.evaluate_every == 0 or (self.steps % 100 == 0 and self.steps < 2500):
+        if self.steps % 100 == 0:
             self.evaluate(floor(self.steps / self.evaluate_every))
 
         # calculates fid
@@ -782,7 +783,7 @@ class Trainer():
     @torch.no_grad()
     def calculate_fid(self, num_batches):
         from pytorch_fid import fid_score
-        torch.cuda.empty_cache()
+        torch.to(self.device).empty_cache()
 
         # setup paths to save fid scores for real and fake images
         real_path = self.fid_dir / 'real'
@@ -864,7 +865,7 @@ class Trainer():
 
     # generates images from interpolation
     @torch.no_grad()
-    def generate_interpolation(self, num = 0, num_image_tiles = 8, trunc = 1.0, num_steps = 100, save_frames = False):
+    def generate_interpolation(self, num = 0, num_image_tiles = 8, trunc = 1.0, ratios = None, num_steps = 100, save_frames = False):
         self.GAN.eval()
 
         ext = self.image_extension
@@ -875,12 +876,13 @@ class Trainer():
         num_layers = self.GAN.G.num_layers
 
         # latents and noise
-        latents_low = noise(num_rows ** 2, latent_dim, device=self.device)
-        latents_high = noise(num_rows ** 2, latent_dim, device=self.device)
-        n = image_noise(num_rows ** 2, image_size, device=self.device)
+        latents_low = noise(1, latent_dim, device=self.device)
+        latents_high = noise(1, latent_dim, device=self.device)
+        n = image_noise(1, image_size, device=self.device)
 
         # ratios for SLERP
-        ratios = torch.linspace(0., 8., num_steps)
+        if ratios is None:
+            ratios = torch.linspace(0., 8., num_steps)
 
         # generates images from interpolated latents
         frames = []
@@ -905,6 +907,38 @@ class Trainer():
             folder_path.mkdir(parents=True, exist_ok=True)
             for ind, frame in enumerate(frames):
                 frame.save(str(folder_path / f'{str(ind)}.{ext}'))
+
+    # generate images from small uniform changes in latent space
+    @torch.no_grad()
+    def generate_from_z_change(self, num, noise_z, noise):
+        print(self.image_size)
+        ext = self.image_extension
+
+        # noise
+        z = noise_z.to(self.device)
+        noise = noise.to(self.device)
+
+        # uniformly distributed latent space values
+        uniform_latent_values = torch.linspace(-1., 1., z.shape[0])
+
+        # replaces original latent space values with uniformly distributed latent space values in one dimension
+        for i, zi in enumerate(z):
+            z[i][0] =  uniform_latent_values[i]
+
+        num_layers = self.GAN.G.num_layers
+        z_def = [(z, num_layers)]
+
+        # generates images from latent space
+        images = self.generate_truncated(self.GAN.S, self.GAN.G, z_def, noise, trunc_psi = 0.75)
+
+        # path to save images
+        folder_path = (self.results_dir / self.name / f'{str(num)}')
+        folder_path.mkdir(parents=True, exist_ok=True)
+
+        # saves images
+        for i, image in enumerate(tqdm(images)):
+            pil_image = transforms.ToPILImage()(image.cpu())
+            pil_image.save(str(folder_path / f'{str(i + 00000)}.{ext}'))
 
     # prints out log
     def print_log(self):

@@ -5,39 +5,30 @@ import random
 from random import random
 
 from tqdm import tqdm
-from datetime import datetime
 from functools import partial
 
 import torch
 
-from stylegan2.utils import cast_list
+from stylegan2.utils import cast_list, audio_features, timestamped_filename
 from stylegan2.network import Trainer
-
-
-# Helper Function
-
-# returns timestamp that will be later used to name files
-def timestamped_filename(prefix = 'generated-'):
-    now = datetime.now()
-    timestamp = now.strftime("%m-%d-%Y_%H-%M-%S")
-    return f'{prefix}{timestamp}'
 
 
 # main function
 def train_from_folder(
-    data = './data',
-    results_dir = './.cache_results',
-    models_dir = './.cache_models',
+    data = './Trippy_Image_Dataset',
+    results_dir = './.results',
+    models_dir = './.models',
+    audio_dir = './sample.wav',
     name = 'trippy',
     new = False,
     load_from = -1,
-    image_size = 128,
+    image_size = 512,
     network_capacity = 16,
     fmap_max = 512,
     transparent = False,
     attn_layers = 1,
     batch_size = 3,
-    gradient_accumulate_every = 10,
+    gradient_accumulate_every = 40,
     num_train_steps = 150000,
     learning_rate = 2e-4,
     lr_mlp = 0.1,
@@ -50,16 +41,18 @@ def train_from_folder(
     generate_interpolation = False,
     interpolation_num_steps = 100,
     save_frames = False,
-    num_image_tiles = 2,
+    num_image_tiles = 8,
     trunc_psi = 0.75,
     mixed_prob = 0.9,
     no_pl_reg = True,
-    aug_prob = 0.,
-    aug_types = ['translation', 'cutout'],
-    dataset_aug_prob = 0.,
+    aug_prob = 0.3,
+    aug_types = ['translation', 'cutout', 'color'],
+    dataset_aug_prob = 0.6,
     calculate_fid_every = None,
     calculate_fid_num_images = 12800,
-    clear_fid_cache = False
+    clear_fid_cache = False,
+    sync_audio = False,
+    generate_latent = False
 ):
     # model arguments
     model_args = dict(
@@ -103,11 +96,34 @@ def train_from_folder(
 
     # generates images from interpolation
     if generate_interpolation:
+        if sync_audio:
+            track = audio_features(audio_dir)
+        else:
+            track = None
+
         model = Trainer(**model_args)
         model.load(load_from)
         samples_name = timestamped_filename()
-        model.generate_interpolation(samples_name, num_image_tiles, num_steps = interpolation_num_steps, save_frames = save_frames)
+        model.generate_interpolation(samples_name, num_image_tiles, ratios = track, num_steps = interpolation_num_steps, save_frames = save_frames, sync_audio = sync_audio)
         print(f'interpolation generated at {results_dir}/{name}/{samples_name}')
+        return
+
+    # generate images from small changes in latent space
+    if generate_latent:
+        n = 10
+        latent_dim = 512
+
+        noise_z = torch.randn(1, latent_dim).repeat(n, 1)
+        noise = torch.FloatTensor(n, image_size, image_size, 1).uniform_(0., 1.)
+
+        model = Trainer(**model_args)
+        model.load(load_from)
+        samples_name = timestamped_filename()
+
+        model.generate_latent(samples_name, noise_z, noise)
+
+        print(f'sample images after small changes in latent space are generated at {results_dir}/{name}/{samples_name}')
+
         return
 
     model = Trainer(**model_args)
