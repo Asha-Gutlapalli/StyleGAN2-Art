@@ -1,3 +1,12 @@
+<<<<<<< Updated upstream
+=======
+import warnings
+
+import os
+import subprocess
+
+from datetime import datetime
+>>>>>>> Stashed changes
 import math
 import random
 from random import random
@@ -236,3 +245,63 @@ def gen_hinge_loss(fake, real):
 # Hinge loss for discriminator
 def hinge_loss(real, fake):
     return (F.relu(1 + real) + F.relu(1 - fake)).mean()
+
+
+# Sync Audio
+
+# extract and store audio from video file
+def extract_audio(uploaded_file):
+    base_dir = Path(os.path.split(os.path.dirname(os.path.realpath(__file__)))[0])
+    audio_dir = base_dir / '.audio'
+    (audio_dir).mkdir(parents=True, exist_ok=True)
+
+    video_path = os.path.join(audio_dir, uploaded_file.name)
+    audio_path = os.path.join(audio_dir, uploaded_file.name[:-4] + '.mp3')
+
+    if not os.path.exists(audio_path):
+        if uploaded_file.name[-4:] == '.mp4':
+            with open(video_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+                subprocess.call(['ffmpeg',
+                                '-i', video_path,
+                                '-f',  'mp3',
+                                '-ab', '192000',
+                                '-vn', audio_path])
+        else:
+            with open(audio_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+    return audio_path
+
+# extracts features from audio
+def audio_features(file_path):
+    #ignore warnings
+    warnings.filterwarnings('ignore')
+
+    # frames per second
+    fps = 24
+
+    # load audio file
+    x, sr = librosa.load(file_path)
+
+    # duration
+    duration = x.shape[0] / sr
+
+    # number of frames
+    num_frames = int(duration * fps)
+
+    # samples per frames
+    samples_per_frame = x.shape[0] / num_frames
+
+    # final audio vector
+    track = np.zeros(num_frames, dtype=x.dtype)
+
+    for frame_num in range(num_frames):
+        start = int(frame_num * samples_per_frame)
+        end = int((frame_num + 1) * samples_per_frame)
+        track[frame_num] = x[start : end].max(axis=0)
+
+    track /= track.max()
+
+    return track
