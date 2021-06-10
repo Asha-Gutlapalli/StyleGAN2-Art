@@ -871,6 +871,9 @@ class Trainer():
         ext = self.image_extension
         num_rows = num_image_tiles
 
+        if sync_audio:
+            save_frames = True
+
         latent_dim = self.GAN.G.latent_dim
         image_size = self.GAN.G.image_size
         num_layers = self.GAN.G.num_layers
@@ -910,8 +913,7 @@ class Trainer():
 
     # generate images from small uniform changes in latent space
     @torch.no_grad()
-    def generate_from_z_change(self, num, noise_z, noise):
-        print(self.image_size)
+    def generate_latent(self, num, noise_z, noise):
         ext = self.image_extension
 
         # noise
