@@ -6,6 +6,7 @@
 - `augment.py`: Augmentation functions and wrapper class for ADA
 - `data.py`: Custom dataset class and helper functions
 - `network.py`: StyleGAN2 network
+- `model.py`: Simplified StyleGAN2 model
 
 
 ## `StyleGAN2` [./stylegan2/network.py]
@@ -47,21 +48,27 @@ class StyleGAN2(nn.Module):
 
 ## `train_from_folder` [./train.py]
 
+You can either refer the python script below or use the following command for more information.
+```bash
+$ python train.py --help
+```
+
 ```python
 def train_from_folder(
     data = './data',
-    results_dir = './.cache_results',
-    models_dir = './.cache_models',
+    results_dir = './.results',
+    models_dir = './.models',
+    audio_dir = './sample.wav',
     name = 'trippy',
     new = False,
     load_from = -1,
-    image_size = 128,
+    image_size = 512,
     network_capacity = 16,
     fmap_max = 512,
     transparent = False,
     attn_layers = 1,
     batch_size = 3,
-    gradient_accumulate_every = 10,
+    gradient_accumulate_every = 40,
     num_train_steps = 150000,
     learning_rate = 2e-4,
     lr_mlp = 0.1,
@@ -74,19 +81,18 @@ def train_from_folder(
     generate_interpolation = False,
     interpolation_num_steps = 100,
     save_frames = False,
-    num_image_tiles = 2,
+    num_image_tiles = 8,
     trunc_psi = 0.75,
     mixed_prob = 0.9,
     no_pl_reg = True,
-    aug_prob = 0.,
-    aug_types = ['translation', 'cutout'],
-    dataset_aug_prob = 0.,
+    aug_prob = 0.3,
+    aug_types = ['translation', 'cutout', 'color'],
+    dataset_aug_prob = 0.6,
     calculate_fid_every = None,
     calculate_fid_num_images = 12800,
     clear_fid_cache = False,
     sync_audio = False,
-    audio_feature_type = "beats",
-    change_z = False
+    generate_latent = False
 ):
 
 '''
@@ -96,6 +102,7 @@ Args:
   data (str): Path to image dataset
   results_dir (str, optional): Path to save results
   models_dir (str, optional): Path to save models
+  audio_dir (str, optional): Path to audio file
   name: Name of the project
   new (bool): Restarts training
   load_from (int, optional): Checkpoint number or -1 if loads model from last checkpoint
@@ -129,7 +136,6 @@ Args:
   calculate_fid_num_images (int, optional): Number of images for which FID is calculated
   clear_fid_cache (bool, optional): Clears FID cache
   sync_audio (bool, optional): Whether or not to sync audio to generated images
-  audio_feature_type (str, optional): Type of audio feature
-  change_z (bool, optional): Whether or not to generate images after small uniform changes in latent space
+  generate_latent (bool, optional): Whether or not to generate images after small uniform changes in latent space
 '''
 ```

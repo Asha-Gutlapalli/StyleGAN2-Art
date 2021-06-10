@@ -28,7 +28,55 @@ StyleGAN is a Generative Adversarial Network proposed by NVIDIA researchers. It 
 This repository is adapted from Phil Wang's <a href="https://github.com/lucidrains/stylegan2-pytorch">"Simple StyleGan2 for PyTorch"</a>. I found his version of the NVlabs official PyTorch implementation of <a href="https://github.com/NVlabs/stylegan2-ada-pytorch">"StyleGAN2-ADA"</a> to be easier to comprehend. His experiments are also interesting and informative.
 
 
-## Install Packages
+## Getting Started
+
+### Install libsndfile
+
+Install "libsndfile" using the following commands for handling audio files in Linux:
+```bash
+$ sudo apt update -y
+$ sudo apt install libsndfile1 -y
+```
+
+
+### Install ffmpeg
+
+Install "ffmpeg" using the following commands:
+```bash
+$ cd ~/ffmpeg_sources && \
+wget -O ffmpeg-snapshot.tar.bz2 https://ffmpeg.org/releases/ffmpeg-snapshot.tar.bz2 && \
+tar xjvf ffmpeg-snapshot.tar.bz2 && \
+cd ffmpeg && \
+PATH="$HOME/bin:$PATH" PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./configure \
+  --prefix="$HOME/ffmpeg_build" \
+  --pkg-config-flags="--static" \
+  --extra-cflags="-I$HOME/ffmpeg_build/include" \
+  --extra-ldflags="-L$HOME/ffmpeg_build/lib" \
+  --extra-libs="-lpthread -lm" \
+  --ld="g++" \
+  --bindir="$HOME/bin" \
+  --enable-gpl \
+  --enable-gnutls \
+  --enable-libaom \
+  --enable-libass \
+  --enable-libfdk-aac \
+  --enable-libfreetype \
+  --enable-libmp3lame \
+  --enable-libopus \
+  --enable-libsvtav1 \
+  --enable-libdav1d \
+  --enable-libvorbis \
+  --enable-libvpx \
+  --enable-libx264 \
+  --enable-libx265 \
+  --enable-nonfree && \
+PATH="$HOME/bin:$PATH" make && \
+make install && \
+hash -r
+```
+
+
+### Install Packages
 
 Install required libraries using the following command:
 ```bash
@@ -42,6 +90,7 @@ $ pip install -r requirements.txt
 - `stylegan2/`: All things StyleGAN2!
 - `Architecture Diagrams/`: This folder consists of all the architecture diagrams from all three papers.
 - `Study.md`: Study material
+- `Examples/`: A folder of videos examples
 
 
 ## Train
@@ -53,7 +102,9 @@ $ python train.py --data='/path/to/dataset'
 There are various [arguments](./stylegan2/README.md#`train_from_folder`) that can be used as command line inputs to this command.
 
 
-## Generate Sample Images
+## Inference
+
+### Generate Sample Images
 
 Generate sample images from the latest checkpoint after training with the following command:
 ```bash
@@ -61,7 +112,7 @@ $ python train.py --generate
 ```
 
 
-## Generate Images/Video from Interpolation
+### Generate Images/Video from Interpolation
 
 Generate a video of interpolation from the latest checkpoint after training with the following command:
 ```bash
@@ -72,3 +123,21 @@ Generate video and images from interpolation from the latest checkpoint after tr
 ```bash
 $ python train.py --generate-interpolation --save-frames
 ```
+
+
+## Run Streamlit App
+
+Use the following command to run Streamlit App:
+```bash
+$ streamlit run run.py
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.1.4:8501
+
+```
+
+Check out the GIF below for demo!
+
+<img src="./app.gif">
