@@ -1,18 +1,11 @@
 import os
-from io import StringIO
 import subprocess
-
-from tqdm import tqdm
-
+import numpy as np
 from PIL import Image
+from tqdm import tqdm
 from pathlib import Path
 
-import ffmpeg
-
-import numpy as np
-
 import torch
-import torchvision
 from torchvision import transforms
 
 from stylegan2.utils import noise, image_noise, styles_def_to_tensor, evaluate_in_chunks, slerp
@@ -42,16 +35,17 @@ class StyleGAN2Model():
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # GAN model
-        self.GAN = StyleGAN2(lr_mlp = self.lr_mlp,
-                            image_size = self.image_size,
-                            network_capacity = self.network_capacity,
-                            fmap_max = self.fmap_max,
-                            transparent = self.transparent,
-                            attn_layers = self.attn_layers,
-                            device = self.device)
+        self.GAN = StyleGAN2(
+            lr_mlp = self.lr_mlp,
+            image_size = self.image_size,
+            network_capacity = self.network_capacity,
+            fmap_max = self.fmap_max,
+            transparent = self.transparent,
+            attn_layers = self.attn_layers,
+            device = self.device
+        )
 
         if model_path is None:
-
             self.models_dir = self.base_dir / models_dir
             (self.models_dir).mkdir(parents=True, exist_ok=True)
 

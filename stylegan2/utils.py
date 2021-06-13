@@ -1,26 +1,19 @@
-<<<<<<< Updated upstream
-=======
-import warnings
-
 import os
-import subprocess
-
-from datetime import datetime
->>>>>>> Stashed changes
 import math
 import random
+import librosa
+import warnings
+import subprocess
+import numpy as np
+from pathlib import Path
 from random import random
 
-'''
-"contextlib" module provides utilities for working with context managers and "with" statements.
--"contextmanager" from "contextlib" is a decorator that manages resources.
-'''
+# "contextlib" module provides utilities for working with context managers and "with" statements.
+# -"contextmanager" from "contextlib" is a decorator that manages resources.
 from contextlib import contextmanager
 
-'''
-"kornia" is a python package for Computer Vision.
--"filter2D" from "kornia" applies a 2D kernel to a tensor.
-'''
+# "kornia" is a python package for Computer Vision.
+# -"filter2D" from "kornia" applies a 2D kernel to a tensor.
 from kornia.filters import filter2D
 
 import torch
@@ -129,7 +122,7 @@ def is_empty(t):
 # raises Nan exception
 def raise_if_nan(t):
     if torch.isnan(t):
-        raise NanException
+        raise ValueError("")
 
 # accumulates contexts periodically
 def gradient_accumulate_contexts(gradient_accumulate_every):
@@ -143,12 +136,11 @@ def gradient_accumulate_contexts(gradient_accumulate_every):
 def loss_backwards(loss, **kwargs):
     loss.backward(**kwargs)
 
-'''
-Gradient Penalty
--Applies gradient penalty to ensure stability in GAN training by preventing exploding gradients in the discriminator.
--Read about it at https://arxiv.org/pdf/1704.00028.pdf
--Watch about it at https://www.youtube.com/watch?v=5c57gnaPkA4
-'''
+# Gradient Penalty
+# ----------------
+# -Applies gradient penalty to ensure stability in GAN training by preventing exploding gradients in the discriminator.
+# -Read about it at https://arxiv.org/pdf/1704.00028.pdf
+# -Watch about it at https://www.youtube.com/watch?v=5c57gnaPkA4
 def gradient_penalty(images, output, weight = 10):
     batch_size = images.shape[0]
     gradients = torch_grad(outputs=output, inputs=images,
@@ -193,12 +185,11 @@ def latent_to_w(style_vectorizer, latent_descr):
 def image_noise(n, im_size, device):
     return torch.FloatTensor(n, im_size, im_size, 1).uniform_(0., 1.).to(device)
 
-'''
-Leaky ReLU
--Leaky ReLU is an activation function that fixes the "dyling ReLU" problem - max(0.1x, x)
--Read about it at https://towardsdatascience.com/the-dying-relu-problem-clearly-explained-42d0c54e0d24#0863
--Watch a video about it at https://www.youtube.com/watch?v=Y-ruNSdpZ0Q
-'''
+# Leaky ReLU
+# ----------
+# -Leaky ReLU is an activation function that fixes the "dyling ReLU" problem - max(0.1x, x)
+# -Read about it at https://towardsdatascience.com/the-dying-relu-problem-clearly-explained-42d0c54e0d24#0863
+# -Watch a video about it at https://www.youtube.com/watch?v=Y-ruNSdpZ0Q
 def leaky_relu(p=0.2):
     return nn.LeakyReLU(p, inplace=True)
 
@@ -214,12 +205,11 @@ def evaluate_in_chunks(max_batch_size, model, *args):
 def styles_def_to_tensor(styles_def):
     return torch.cat([t[:, None, :].expand(-1, n, -1) for t, n in styles_def], dim=1)
 
-'''
-Spherical Linear Interpolation (SLERP)
--Spherical Linear Interpolation is a type of interpolation between two points on an arc.
--Read more about at https://en.wikipedia.org/wiki/Slerp
--Watch a video about interpolations at https://www.youtube.com/watch?v=ibkT5ao8kGY
-'''
+# Spherical Linear Interpolation (SLERP)
+# --------------------------------------
+# -Spherical Linear Interpolation is a type of interpolation between two points on an arc.
+# -Read more about at https://en.wikipedia.org/wiki/Slerp
+# -Watch a video about interpolations at https://www.youtube.com/watch?v=ibkT5ao8kGY
 def slerp(val, low, high):
     low_norm = low / torch.norm(low, dim=1, keepdim=True)
     high_norm = high / torch.norm(high, dim=1, keepdim=True)
@@ -231,12 +221,13 @@ def slerp(val, low, high):
 
 # Losses
 
-'''
-Hinge Loss
--Hinge Loss is usually used to train classifiers especially Support Vector Machines (SVMs).
--Read about at https://towardsdatascience.com/a-definitive-explanation-to-hinge-loss-for-support-vector-machines-ab6d8d3178f1
--Watch a video about it at https://www.youtube.com/watch?v=RBtgpKmdBlk
-'''
+
+# Hinge Loss
+# ----------
+# -Hinge Loss is usually used to train classifiers especially Support Vector Machines (SVMs).
+# -Read about at https://towardsdatascience.com/a-definitive-explanation-to-hinge-loss-for-support-vector-machines-ab6d8d3178f1
+# -Watch a video about it at https://www.youtube.com/watch?v=RBtgpKmdBlk
+
 
 # Hinge loss for generator
 def gen_hinge_loss(fake, real):

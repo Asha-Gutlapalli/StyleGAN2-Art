@@ -1,35 +1,30 @@
-'''
-"functools" is a module for higher order functions that act on other functions.
-"partial" from "functools" is a higher order function that takes a function as input and generates a new function by passing partial arguments.
-'''
+# "functools" is a module for higher order functions that act on other functions.
+# "partial" from "functools" is a higher order function that takes a function as input and generates a new function by passing partial arguments.
+
+from PIL import Image
+from pathlib import Path
 from functools import partial
 
-from pathlib import Path
-from PIL import Image
-
 import torch
-from torch.utils import data
 import torchvision
+from torch.utils import data
 from torchvision import transforms
 
 from stylegan2.utils import RandomApply, exists
 
 
 # Constants
-
 EXTS = ['jpg', 'jpeg', 'png']
 
 
 # Helper Functions and Classes
 
-'''
-R - Red
-G - Green
-B - Blue
-A - Alpha
+# R - Red
+# G - Green
+# B - Blue
+# A - Alpha
+# Alpha channel adjusts the transparency of the image.
 
-Alpha channel adjusts the transparency of the image.
-'''
 
 # converts 'RGB' image to 'RGBA' image
 def convert_rgb_to_transparent(image):
@@ -87,7 +82,6 @@ class Dataset(data.Dataset):
         assert len(self.paths) > 0, f'No images were found in {folder} for training'
 
         convert_image_fn = convert_transparent_to_rgb if not transparent else convert_rgb_to_transparent
-        num_channels = 3 if not transparent else 4
 
         self.transform = transforms.Compose([
             transforms.Lambda(convert_image_fn),
