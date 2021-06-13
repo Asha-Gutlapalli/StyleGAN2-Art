@@ -9,7 +9,7 @@
 - `model.py`: Simplified StyleGAN2 model
 
 
-## `StyleGAN2` [./stylegan2/network.py]
+## [`StyleGAN2`](./stylegan2/network.py)
 
 ```python
 class StyleGAN2(nn.Module):
@@ -31,7 +31,7 @@ class StyleGAN2(nn.Module):
 ```
 
 
-## `train_from_folder` [./train.py]
+## [`train_from_folder`](./train.py)
 
 You can either refer the python script below or use the following command for more information.
 ```bash
