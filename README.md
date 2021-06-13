@@ -110,4 +110,4 @@ $ streamlit run run.py
 
 Check out the GIF below for demo!
 
-<img src="./app.gif">
+<img src="app.gif">
