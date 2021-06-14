@@ -45,7 +45,7 @@ def train_from_folder(
     models_dir = './.models',                       # Path to save models
     audio_dir = './sample.wav',                     # Path to audio file
     name = 'trippy',                                # project name
-    new = False,                                    # ???????
+    new = False,                                    # flag to training a new model, else from previous model
     load_from = -1,                                 # Checkpoint number or -1 if loads model from last checkpoint
     image_size = 512,                               # Side of image dimension
     network_capacity = 16,                          # Capacity of Network
