@@ -27,12 +27,13 @@ NUM_CORES = multiprocessing.cpu_count()
 
 # attention
 
-'''
-Depth-wise Seperable Convolution
--Depth-wise Seperable Convolution is a type of convolution that is much faster and requires less number of parameters.
--Read about it at https://medium.com/@zurister/depth-wise-convolution-and-depth-wise-separable-convolution-37346565d4ec, https://arxiv.org/pdf/1610.02357.pdf
--Watch a video about it at https://www.youtube.com/watch?v=T7o3xvJLuHk
-'''
+
+# Depth-wise Seperable Convolution
+# - -------------------------------
+# -  Depth-wise Seperable Convolution is a type of convolution that is much faster and requires less number of parameters.
+# -  Read about it at https://medium.com/@zurister/depth-wise-convolution-and-depth-wise-separable-convolution-37346565d4ec, https://arxiv.org/pdf/1610.02357.pdf
+# -  Watch a video about it at https://www.youtube.com/watch?v=T7o3xvJLuHk
+
 class DepthWiseConv2d(nn.Module):
     def __init__(self, dim_in, dim_out, kernel_size, padding = 0, stride = 1, bias = True):
         super().__init__()
@@ -43,16 +44,15 @@ class DepthWiseConv2d(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-'''
-Linear Attention
--This is an efficient form of Self-Attention that captures global attention.
--Read about it at https://arxiv.org/pdf/2006.16236.pdf
--Check out the architecture at https://github.com/lucidrains/linear-attention-transformer/blob/master/linear-attention.png
--Watch a video about it at https://www.youtube.com/watch?v=hAooAOFRsYc
+# Linear Attention
+# - ---------------
+# -  This is an efficient form of Self-Attention that captures global attention.
+# -  Read about it at https://arxiv.org/pdf/2006.16236.pdf
+# -  Check out the architecture at https://github.com/lucidrains/linear-attention-transformer/blob/master/linear-attention.png
+# -  Watch a video about it at https://www.youtube.com/watch?v=hAooAOFRsYc
+# -  Gaussian Error Linear Unit (GELU) is an activation function that uses standard gaussian cumulative distribution function to weight inputs by their value.
+# -  Read about it at https://arxiv.org/pdf/1606.08415.pdf
 
--Gaussian Error Linear Unit (GELU) is an activation function that uses standard gaussian cumulative distribution function to weight inputs by their value.
--Read about it at https://arxiv.org/pdf/1606.08415.pdf
-'''
 class LinearAttention(nn.Module):
     def __init__(self, dim, dim_head = 64, heads = 8):
         super().__init__()
@@ -107,9 +107,9 @@ class EqualLinear(nn.Module):
 
 # Style Vectorizer
 # ================
-# -It is the Mapping Network in the research paper.
-# -Transforms latents in z space to styles in w space.
-# -It is a stack of linear layers.
+# - It is the Mapping Network in the research paper.
+# - Transforms latents in z space to styles in w space.
+# - It is a stack of linear layers.
 class StyleVectorizer(nn.Module):
     def __init__(self, emb, depth, lr_mul = 0.1):
         super().__init__()
@@ -126,8 +126,8 @@ class StyleVectorizer(nn.Module):
 
 # Conv2DMod
 # =========
-# -Custom convolution layer with modulation.
-# -Performs demodulation unless specified otherwise.
+# - Custom convolution layer with modulation.
+# - Performs demodulation unless specified otherwise.
 class Conv2DMod(nn.Module):
     def __init__(self, in_chan, out_chan, kernel, demod=True, stride=1, dilation=1, eps = 1e-8, **kwargs):
         super().__init__()

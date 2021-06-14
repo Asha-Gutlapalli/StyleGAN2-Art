@@ -151,3 +151,4 @@ Trippy_Image_Dataset/
 
 # audio file
 sample.wav
+*.pt

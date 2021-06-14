@@ -1,5 +1,3 @@
-import os
-
 import torch
 
 from stylegan2.utils import audio_features, noise, timestamped_filename
