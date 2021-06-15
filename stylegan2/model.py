@@ -268,5 +268,6 @@ def image_grid(x, n):
     x = rearrange(x, "b h w c -> b c h w")
     g = make_grid(x, n)
     g = rearrange(g, "c h w -> h w c")
+    g = g.numpy()
     return g
 
