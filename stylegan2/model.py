@@ -261,13 +261,14 @@ class StyleGAN2Model():
 
 # ----- functions
 
-def image_grid(x, n):
-    if not isinstance(x, np.ndarray):
-        x = np.array(x)
-    x = torch.from_numpy(x)
-    x = rearrange(x, "b h w c -> b c h w")
-    g = make_grid(x, n)
-    g = rearrange(g, "c h w -> h w c")
-    g = g.numpy()
-    return g
-
+def image_grid(x, n, as_uint8):
+  if not isinstance(x, np.ndarray):
+    x = np.array(x)
+  x = torch.from_numpy(x)
+  x = rearrange(x, "b h w c -> b c h w")
+  g = make_grid(x, n)
+  g = rearrange(g, "c h w -> h w c")
+  g = g.numpy()
+  if as_uint8:
+    g = (g * 255).astype(np.uint8)
+  return g
