@@ -1,3 +1,5 @@
+import subprocess
+
 import math
 from math import floor, log2
 import json
@@ -865,7 +867,7 @@ class Trainer():
 
     # generates images from interpolation
     @torch.no_grad()
-    def generate_interpolation(self, num = 0, num_image_tiles = 8, trunc = 1.0, ratios = None, num_steps = 100, save_frames = False):
+    def generate_interpolation(self, num = 0, num_image_tiles = 8, trunc = 1.0, ratios = None, num_steps = 100, save_frames = False, sync_audio = False, audio_path = None):
         self.GAN.eval()
 
         ext = self.image_extension
@@ -909,11 +911,28 @@ class Trainer():
             folder_path = (self.results_dir / self.name / f'{str(num)}')
             folder_path.mkdir(parents=True, exist_ok=True)
             for ind, frame in enumerate(frames):
-                frame.save(str(folder_path / f'{str(ind)}.{ext}'))
+                frame.save(str(folder_path / f'{str(ind).zfill(5)}.{ext}'))
+
+        # sync audio to generated images
+        if sync_audio:
+            # check for audio
+            if audio_path is None:
+                raise("No audio provided. Please provide audio.")
+
+            video_path = str(self.results_dir / self.name / f'{str(num)}.mp4')
+
+            # combine image sequences and audio into video
+            subprocess.call(['ffmpeg',
+                    '-r', '24',
+                    '-i', f'{folder_path}/%05d.jpg',
+                    '-i', audio_path,
+                    '-r', '24',
+                    '-vcodec', 'libx264',
+                    '-y', video_path])
 
     # generate images from small uniform changes in latent space
     @torch.no_grad()
-    def generate_latent(self, num, noise_z, noise):
+    def generate_from_latent(self, num, noise_z, noise):
         ext = self.image_extension
 
         # noise
@@ -940,7 +959,7 @@ class Trainer():
         # saves images
         for i, image in enumerate(tqdm(images)):
             pil_image = transforms.ToPILImage()(image.cpu())
-            pil_image.save(str(folder_path / f'{str(i + 00000)}.{ext}'))
+            pil_image.save(str(folder_path / f'{str(i)}.{ext}'))
 
     # prints out log
     def print_log(self):

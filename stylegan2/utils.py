@@ -1,12 +1,9 @@
-<<<<<<< Updated upstream
-=======
 import warnings
 
 import os
 import subprocess
 
 from datetime import datetime
->>>>>>> Stashed changes
 import math
 import random
 from random import random
@@ -23,12 +20,24 @@ from contextlib import contextmanager
 '''
 from kornia.filters import filter2D
 
+from pathlib import Path
+
+import numpy as np
+
+import librosa
+
 import torch
 from torch import nn
 import torch.nn.functional as F
 from torch.autograd import grad as torch_grad
 
 # Helper Classes and Functions
+
+# returns current timestamp that is later used to name output files
+def timestamped_filename(prefix = 'generated-'):
+    now = datetime.now()
+    timestamp = now.strftime("%m-%d-%Y_%H-%M-%S")
+    return f'{prefix}{timestamp}'
 
 # calculates exponential moving averages
 class EMA():

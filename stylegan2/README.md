@@ -58,7 +58,7 @@ def train_from_folder(
     data = './data',
     results_dir = './.results',
     models_dir = './.models',
-    audio_dir = './sample.wav',
+    audio_path = './sample.wav',
     name = 'trippy',
     new = False,
     load_from = -1,
@@ -92,7 +92,7 @@ def train_from_folder(
     calculate_fid_num_images = 12800,
     clear_fid_cache = False,
     sync_audio = False,
-    generate_latent = False
+    generate_from_latent = False
 ):
 
 '''
@@ -102,7 +102,7 @@ Args:
   data (str): Path to image dataset
   results_dir (str, optional): Path to save results
   models_dir (str, optional): Path to save models
-  audio_dir (str, optional): Path to audio file
+  audio_path (str, optional): Path to audio file
   name: Name of the project
   new (bool): Restarts training
   load_from (int, optional): Checkpoint number or -1 if loads model from last checkpoint
@@ -136,6 +136,6 @@ Args:
   calculate_fid_num_images (int, optional): Number of images for which FID is calculated
   clear_fid_cache (bool, optional): Clears FID cache
   sync_audio (bool, optional): Whether or not to sync audio to generated images
-  generate_latent (bool, optional): Whether or not to generate images after small uniform changes in latent space
+  generate_from_latent (bool, optional): Whether or not to generate images after small uniform changes in latent space
 '''
 ```

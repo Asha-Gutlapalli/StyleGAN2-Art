@@ -18,7 +18,7 @@ def train_from_folder(
     data = './Trippy_Image_Dataset',
     results_dir = './.results',
     models_dir = './.models',
-    audio_dir = './sample.wav',
+    audio_path = './sample.wav',
     name = 'trippy',
     new = False,
     load_from = -1,
@@ -52,7 +52,7 @@ def train_from_folder(
     calculate_fid_num_images = 12800,
     clear_fid_cache = False,
     sync_audio = False,
-    generate_latent = False
+    generate_from_latent = False
 ):
     # model arguments
     model_args = dict(
@@ -97,19 +97,19 @@ def train_from_folder(
     # generates images from interpolation
     if generate_interpolation:
         if sync_audio:
-            track = audio_features(audio_dir)
+            track = audio_features(audio_path)
         else:
             track = None
 
         model = Trainer(**model_args)
         model.load(load_from)
         samples_name = timestamped_filename()
-        model.generate_interpolation(samples_name, num_image_tiles, ratios = track, num_steps = interpolation_num_steps, save_frames = save_frames, sync_audio = sync_audio)
+        model.generate_interpolation(samples_name, num_image_tiles, ratios = track, num_steps = interpolation_num_steps, save_frames = save_frames, sync_audio = sync_audio, audio_path = audio_path)
         print(f'interpolation generated at {results_dir}/{name}/{samples_name}')
         return
 
     # generate images from small changes in latent space
-    if generate_latent:
+    if generate_from_latent:
         n = 10
         latent_dim = 512
 
@@ -120,7 +120,7 @@ def train_from_folder(
         model.load(load_from)
         samples_name = timestamped_filename()
 
-        model.generate_latent(samples_name, noise_z, noise)
+        model.generate_from_latent(samples_name, noise_z, noise)
 
         print(f'sample images after small changes in latent space are generated at {results_dir}/{name}/{samples_name}')
 
