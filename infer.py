@@ -2,7 +2,7 @@ import os
 
 import torch
 
-from stylegan2.utils import audio_features, noise, image_noise, timestamped_filename
+from stylegan2.utils import audio_features, noise, timestamped_filename
 from stylegan2.model import StyleGAN2Model
 
 # file paths
