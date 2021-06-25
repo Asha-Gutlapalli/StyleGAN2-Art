@@ -1,4 +1,3 @@
-import subprocess
 import streamlit as st
 
 from stylegan2.utils import extract_audio, audio_features, timestamped_filename

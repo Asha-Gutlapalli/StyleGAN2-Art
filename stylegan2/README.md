@@ -80,3 +80,22 @@ def train_from_folder(
     generate_latent = False                         # Whether or not to generate images after small uniform changes in latent space
 )
 ```
+
+
+## Troubleshooting
+
+1. Often the audio that we get are not the correct `.wav` files so use ffmpeg as follows:
+```
+ffmpeg -i <input_file> ./output.wav
+```
+
+2. In order to get the final music video run ffmpeg as follows:
+```
+# fps   :  30
+# images:  ./samples/part_g1<integer>.png
+# audio:   ./part_g1_30s.wav
+# codec:   libx264
+# output:  ./samples/particle_g1.mp4
+
+ffmpeg -framerate 30 -i ./samples/part_g1%d.png -i ./part_g1_30s.wav -vcodec libx264 ./samples/particle_g1.mp4 -y
+```
