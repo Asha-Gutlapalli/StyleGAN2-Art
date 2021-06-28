@@ -1,8 +1,8 @@
 # StyleGAN2-Art [WIP]
 
-StyleGAN is a Generative Adversarial Network proposed by NVIDIA researchers. It builds upon the [Progressive Growing GAN](https://arxiv.org/pdf/1710.10196.pdf)architecture to produce photo-realistic synthetic images. They have released three research papers regarding this as of June 2021. Their contributions are briefly summarized as follows:
+StyleGAN is a Generative Adversarial Network proposed by NVIDIA researchers. It builds upon the [Progressive Growing GAN](https://arxiv.org/pdf/1710.10196.pdf) architecture to produce photo-realistic synthetic images. They have released three research papers regarding this as of June 2021. Their contributions are briefly summarized as follows:
 
-- [StyleGAN](https://arxiv.org/pdf/1812.04948.pdf) [[Architecture](/diags/StyleGAN-Architecture.png)]:
+- [StyleGAN](https://arxiv.org/pdf/1812.04948.pdf):
   - **Bilinear Sampling:** to improve image quality.
   - **Mapping Network:** transforms latent space to w-space (Intermediate latent space).
   - **Synthesis Network:** uses [ADA-IN (Adaptive Instance Normalization)](https://arxiv.org/pdf/1703.06868.pdf) to generate images.
@@ -12,20 +12,28 @@ StyleGAN is a Generative Adversarial Network proposed by NVIDIA researchers. It 
   - **Perceptual Path Length:** measures the difference between successive images when interpolating between two noise inputs.
   - **Linear Separability:** separates the latent space with a linear hyperplane based on attribute.
 
-- [StyleGAN2](https://arxiv.org/pdf/1912.04958.pdf) [[Architecture](/diags/StyleGAN2-Architecture.png)]:
+  <p align="center">
+    <img src="./diags/StyleGAN-Architecture.png">
+  </p>
+
+- [StyleGAN2](https://arxiv.org/pdf/1912.04958.pdf):
   - **Weight Demodulation:** removes the droplet artifacts that were in the original StyleGAN.
   - **Lazy Regularization:** alleviates heavy memory usage and computation cost of regularization.
   - **Perceptual Path Length Regularization:** encourages smooth mapping from latent space to generated image to achieve feature disentanglement.
   - **No Growing:** replaces Progressive Growing GAN architecture to prevent phase artifacts with skip connections in the generator and residual connections in the discriminator.
   - **Large Networks:** yield better results where high-resolution images have more influence.
 
-- [StyleGAN2-ADA](https://arxiv.org/pdf/2006.06676.pdf) [[Architecture](/diags/StyleGAN2-ADA-Architecture.png)]:
+  <p align="center">
+    <img src="./diags/StyleGAN2-Architecture(1).png">
+    <img src="./diags/StyleGAN2-Architecture(2).png">
+  </p>
+
+- [StyleGAN2-ADA](https://arxiv.org/pdf/2006.06676.pdf):
   - **Adaptive Discrimator Augmentation:** augments the data given to the discriminator to overcome overfitting without the augmentations leaking into generated images.
 
-
-## Credits
-
-This repository is adapted from Phil Wang's [`lucidrains/stylegan2-pytorch`](https://github.com/lucidrains/stylegan2-pytorch). I found his version of the NVlabs official PyTorch implementation of [`NVlabs/stylegan2-ada-pytorch`](https://github.com/NVlabs/stylegan2-ada-pytorch) to be easier to comprehend. His experiments are also interesting and informative.
+  <p align="center">
+    <img src="./diags/StyleGAN2-ADA-Architecture.png">
+  </p>
 
 
 ## Getting Started
@@ -94,11 +102,13 @@ $ pip install -r requirements.txt
 
 ## Files
 
-- `train.py`: Main file to kick start training, generate samples images, and generate images from interpolation.
+- `diags/`: This folder consists of all the architecture diagrams from all three papers.
 - `stylegan2/`: All things StyleGAN2!
-- `Architecture Diagrams/`: This folder consists of all the architecture diagrams from all three papers.
-- `Study.md`: Study material
-- `Examples/`: A folder of videos examples
+- `notebooks/`: Notebooks for generating latent space from sound.
+- `examples/`: A folder of example videos.
+- `train.py`: Main file to kick start training, generate samples images, and generate images from interpolation.
+- `infer.py`: Simplified inference file.
+- `Study.md`: Study material.
 
 
 ## Train
@@ -149,3 +159,13 @@ $ streamlit run run.py
 Check out the GIF below for demo!
 
 <img src="app.gif">
+
+
+## Credits
+
+I would like to thank the following people for sharing their work:
+
+- **Phil Wang**: This code is adapted from Phil Wang's [`lucidrains/stylegan2-pytorch`](https://github.com/lucidrains/stylegan2-pytorch). I found his version of the NVlabs official PyTorch implementation of [`NVlabs/stylegan2-ada-pytorch`](https://github.com/NVlabs/stylegan2-ada-pytorch) to be easier to comprehend. His experiments are also interesting and informative.
+
+
+- **Yiyang Li**: The pre-trained Super Resolution GAN generator model used in this repository is from Yiyang Li's [`yiyang7/Super_Resolution_with_CNNs_and_GANs`](https://github.com/yiyang7/Super_Resolution_with_CNNs_and_GANs).

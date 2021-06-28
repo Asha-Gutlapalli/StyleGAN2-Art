@@ -12,9 +12,10 @@ from einops.einops import repeat, rearrange
 
 from stylegan2.utils import noise, image_noise, styles_def_to_tensor, evaluate_in_chunks, slerp
 from stylegan2.network import StyleGAN2
+from stylegan2.srgan import Generator
 
 class StyleGAN2Model():
-    def __init__(self, model_path=None, models_dir='.models', results_dir='.results', **config):
+    def __init__(self, model_path=None, models_dir='.models', results_dir='.results', upsample=False, **config):
 
         self.image_size = config.pop('image_size', 128)
         self.latent_dim = config.pop('latent_dim', 512)
@@ -27,6 +28,7 @@ class StyleGAN2Model():
         self.steps = config.pop('steps', 1)
         self.lr_mlp = config.pop('lr_mlp', 0.1)
         self.av = None
+        self.upsample = upsample
 
         # path to save results
         self.base_dir = Path(os.path.split(os.path.dirname(os.path.realpath(__file__)))[0])
@@ -47,18 +49,19 @@ class StyleGAN2Model():
             device = self.device
         )
 
+        self.models_dir = self.base_dir / models_dir
+        (self.models_dir).mkdir(parents=True, exist_ok=True)
+
+        urls = {"StyleGAN2" : "https://www.dropbox.com/s/g5ap1n549qoudzj/model_45.pt?dl=0",
+                "SRGAN_G" : "https://www.dropbox.com/s/x9ks2hnc7rswexo/best_g.pth.tar?dl=0"}
+
         if model_path is None:
-            self.models_dir = self.base_dir / models_dir
-            (self.models_dir).mkdir(parents=True, exist_ok=True)
-
-            url = "https://www.dropbox.com/s/g5ap1n549qoudzj/model_45.pt?dl=0"
-
-            model_name = os.path.split(url)[-1][:-5]
+            model_name = os.path.split(urls["StyleGAN2"])[-1][:-5]
             model_path = os.path.join(self.models_dir, model_name)
 
             # download pretrained model
             if not os.path.exists(model_path):
-                subprocess.call(['wget', url, '-O', model_path])
+                subprocess.call(['wget', urls["StyleGAN2"], '-O', model_path])
 
         # load model
         print("Loading model from ...", model_path)
@@ -70,6 +73,26 @@ class StyleGAN2Model():
         self.gen_n_layers = self.GAN.G.num_layers
         self.stylevec = self.GAN.S
 
+        # automatically upsample if image size less than 256
+        if self.image_size < 256:
+            self.upsample = True
+
+        # upsample images
+        if self.upsample:
+            # SRGAN generator
+            self.srgan_gen = Generator(scale_factor=4)
+
+            sr_gen_name = os.path.split(urls["SRGAN_G"])[-1][:-5]
+            sr_gen_path = os.path.join(self.models_dir, sr_gen_name)
+
+            # download pretrained SRGAN generator model
+            if not os.path.exists(sr_gen_path):
+                subprocess.call(['wget', urls["SRGAN_G"], '-O', sr_gen_path])
+
+            # load SRGAN generator
+            srgan_checkpoint = torch.load(sr_gen_path, map_location=self.device)
+            self.srgan_gen.load_state_dict(srgan_checkpoint["state_dict"])
+            self.srgan_gen.to(self.device)
 
     # truncates w in w-space so that values lie close to the mean
     @torch.no_grad()
@@ -134,7 +157,13 @@ class StyleGAN2Model():
             interp_latents = slerp(ratio, latents_low, latents_high) # [1, latent_dim]
             latents = [(interp_latents, num_layers)]
             generated_images = self.generate_truncated(self.GAN.S, self.GAN.G, latents, n, trunc_psi = 0.6)
-            pil_image = transforms.ToPILImage()(torch.squeeze(generated_images).cpu())
+
+            if self.upsample:
+                hr_images = self.srgan_gen(generated_images)
+            else:
+                hr_images = generated_images
+
+            pil_image = transforms.ToPILImage()(torch.squeeze(hr_images).cpu())
 
             if self.transparent:
                 background = Image.new("RGBA", pil_image.size, (255, 255, 255))
@@ -152,12 +181,15 @@ class StyleGAN2Model():
             for ind, frame in enumerate(frames):
                 frame.save(str(folder_path / f'{str(ind).zfill(5)}.jpg'))
 
+        # sync audio to generated images
         if sync_audio:
+            # check for audio
             if audio_path is None:
                 raise("No audio provided. Please provide audio.")
 
             video_path = str(self.results_dir/f'{str(name)}.mp4')
 
+            # combine image sequences and audio into video
             subprocess.call(['ffmpeg',
                     '-r', '24',
                     '-i', f'{folder_path}/%05d.jpg',
@@ -170,7 +202,7 @@ class StyleGAN2Model():
 
     # generate images from small uniform changes in latent space
     @torch.no_grad()
-    def generate_latent(self, name, noise_z, noise):
+    def generate_from_latent(self, name, noise_z, noise):
         # noise
         z = noise_z.to(self.device)
         noise = noise.to(self.device)

@@ -7,6 +7,7 @@ import subprocess
 import numpy as np
 from pathlib import Path
 from random import random
+from datetime import datetime
 
 # "contextlib" module provides utilities for working with context managers and "with" statements.
 # - "contextmanager" from "contextlib" is a decorator that manages resources.
@@ -22,6 +23,12 @@ import torch.nn.functional as F
 from torch.autograd import grad as torch_grad
 
 # Helper Classes and Functions
+
+# returns current timestamp that is later used to name output files
+def timestamped_filename(prefix = 'generated-'):
+    now = datetime.now()
+    timestamp = now.strftime("%m-%d-%Y_%H-%M-%S")
+    return f'{prefix}{timestamp}'
 
 # calculates exponential moving averages
 class EMA():

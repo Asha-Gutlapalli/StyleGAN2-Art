@@ -2,11 +2,14 @@
 
 ## Files
 
-- `utils.py`: Helper classes and functions
-- `augment.py`: Augmentation functions and wrapper class for ADA
-- `data.py`: Custom dataset class and helper functions
-- `network.py`: StyleGAN2 network
-- `model.py`: Simplified StyleGAN2 model
+- `utils.py`: Helper classes and functions.
+- `augment.py`: Augmentation functions and wrapper class for ADA.
+- `data.py`: Custom dataset class and helper functions.
+- `network.py`: StyleGAN2 network.
+- `model.py`: Simplified StyleGAN2 model.
+- `train.py`: Trainer function.
+- `music_video.py`: Create music video.
+- `srgan.py`: Super Resolution GAN generator model.
 
 
 ## [`StyleGAN2`](./stylegan2/network.py)
@@ -43,7 +46,7 @@ def train_from_folder(
     data = './data',                                # image dataset
     results_dir = './.results',                     # Path to save results
     models_dir = './.models',                       # Path to save models
-    audio_dir = './sample.wav',                     # Path to audio file
+    audio_path = './sample.wav',                    # Path to audio file
     name = 'trippy',                                # project name
     new = False,                                    # flag to training a new model, else from previous model
     load_from = -1,                                 # Checkpoint number or -1 if loads model from last checkpoint
@@ -77,7 +80,7 @@ def train_from_folder(
     calculate_fid_num_images = 12800,               # Number of images for which FID is calculated
     clear_fid_cache = False,                        # Clears FID cache
     sync_audio = False,                             # Whether or not to sync audio to generated images
-    generate_latent = False                         # Whether or not to generate images after small uniform changes in latent space
+    generate_from_latent = False                    # Whether or not to generate images after small uniform changes in latent space
 )
 ```
 
