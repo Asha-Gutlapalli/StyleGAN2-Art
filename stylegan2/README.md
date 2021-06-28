@@ -9,44 +9,29 @@
 - `model.py`: Simplified StyleGAN2 model
 
 
-## `StyleGAN2` [./stylegan2/network.py]
+## [`StyleGAN2`](./stylegan2/network.py)
 
 ```python
 class StyleGAN2(nn.Module):
     def __init__(
       self,
-      image_size,
-      latent_dim = 512,
-      fmap_max = 512,
-      style_depth = 8,
-      network_capacity = 16,
-      transparent = False,
-      attn_layers = [],
-      steps = 1,
-      lr = 1e-4,
-      ttur_mult = 2,
-      lr_mlp = 0.1,
-      device = "cuda"):
-
-    '''
-    Args:
-      image_size (int): Image size
-      latent_dim (int, optional): Latent dimension
-      fmap_max (int, optional): Maximum filter size
-      style_depth (int, optional): Number of layers in Mapping Network
-      network_capacity (int, optional): Network capacity
-      transparent (bool, optional): True if RGBA images and False otherwise
-      attn_layers (list(int), optional): Number of attention layers
-      steps (int): Number of steps
-      lr (float, optional): Learning rate
-      ttur_mult (float, optional): Learning rate multiplier for Adam optimizer
-      lr_mlp (float, optional): Learning rate multiplier for MLP(Multilayer Perceptron)
-      device (str): CPU or GPU
-    '''
+      image_size,            #  Image size
+      latent_dim = 512,      # Latent dimension
+      fmap_max = 512,        # Maximum filter size
+      style_depth = 8,       # Number of layers in Mapping Network
+      network_capacity = 16, # Network capacity
+      transparent = False,   # True if RGBA images and False otherwise
+      attn_layers = [],      #  Number of attention layers
+      steps = 1,             # Number of steps
+      lr = 1e-4,             # Learning rate
+      ttur_mult = 2,         # Learning rate multiplier for Adam optimizer
+      lr_mlp = 0.1,          # Learning rate multiplier for MLP(Multilayer Perceptron)
+      device = "cuda"        # CPU or GPU
+    )
 ```
 
 
-## `train_from_folder` [./train.py]
+## [`train_from_folder`](./train.py)
 
 You can either refer the python script below or use the following command for more information.
 ```bash
@@ -55,87 +40,62 @@ $ python train.py --help
 
 ```python
 def train_from_folder(
-    data = './data',
-    results_dir = './.results',
-    models_dir = './.models',
-    audio_path = './sample.wav',
-    name = 'trippy',
-    new = False,
-    load_from = -1,
-    image_size = 512,
-    network_capacity = 16,
-    fmap_max = 512,
-    transparent = False,
-    attn_layers = 1,
-    batch_size = 3,
-    gradient_accumulate_every = 40,
-    num_train_steps = 150000,
-    learning_rate = 2e-4,
-    lr_mlp = 0.1,
-    ttur_mult = 1.5,
-    num_workers =  None,
-    save_every = 1000,
-    evaluate_every = 1000,
-    generate = False,
-    num_generate = 1,
-    generate_interpolation = False,
-    interpolation_num_steps = 100,
-    save_frames = False,
-    num_image_tiles = 8,
-    trunc_psi = 0.75,
-    mixed_prob = 0.9,
-    no_pl_reg = True,
-    aug_prob = 0.3,
-    aug_types = ['translation', 'cutout', 'color'],
-    dataset_aug_prob = 0.6,
-    calculate_fid_every = None,
-    calculate_fid_num_images = 12800,
-    clear_fid_cache = False,
-    sync_audio = False,
-    generate_from_latent = False
-):
+    data = './data',                                # image dataset
+    results_dir = './.results',                     # Path to save results
+    models_dir = './.models',                       # Path to save models
+    audio_path = './sample.wav',                    # Path to audio file
+    name = 'trippy',                                # project name
+    new = False,                                    # flag to training a new model, else from previous model
+    load_from = -1,                                 # Checkpoint number or -1 if loads model from last checkpoint
+    image_size = 512,                               # Side of image dimension
+    network_capacity = 16,                          # Capacity of Network
+    fmap_max = 512,                                 # Maximum filter size
+    transparent = False,                            # True for RGBA images and False otherwise
+    attn_layers = 1,                                # Number of attention layers
+    batch_size = 3,                                 # Batch size
+    gradient_accumulate_every = 40,                 # Number of gradient accumulations
+    num_train_steps = 150000,                       # Number of training steps or epochs
+    learning_rate = 2e-4,                           # Learning rate
+    lr_mlp = 0.1,                                   # Learning rate multiplier for MLP(Multilayer Perceptron)
+    ttur_mult = 1.5,                                # Learning rate multiplier for Adam optimizer
+    num_workers =  None,                            # Number of workers
+    save_every = 1000,                              # Once in number of steps to save model
+    evaluate_every = 1000,                          # Once in number of steps to evaluate and save results
+    generate = False,                               # Whether or not to generate sample images
+    num_generate = 1,                               # Number of sample images to be generated
+    generate_interpolation = False,                 # Whether or not generate images from interpolation
+    interpolation_num_steps = 100,                  # Number of interpolation steps
+    save_frames = False,                            # Whether or not to save frames
+    num_image_tiles = 8,                            # Number of image tiles on each side
+    trunc_psi = 0.75,                               # Truncation value
+    mixed_prob = 0.9,                               # Probability for mixed noise
+    no_pl_reg = True,                               # Whether or not to calculate Perceptual Path Length Regularization
+    aug_prob = 0.3,                                 # Augmentation probability for ADA
+    aug_types = ['translation', 'cutout', 'color'], # Augmentation types for ADA
+    dataset_aug_prob = 0.6,                         # Augmentation probability for dataset
+    calculate_fid_every = None,                     # Once in number of steps to calculate and save FID score
+    calculate_fid_num_images = 12800,               # Number of images for which FID is calculated
+    clear_fid_cache = False,                        # Clears FID cache
+    sync_audio = False,                             # Whether or not to sync audio to generated images
+    generate_from_latent = False                    # Whether or not to generate images after small uniform changes in latent space
+)
+```
 
-'''
-This is the main function to train and generate images!
 
-Args:
-  data (str): Path to image dataset
-  results_dir (str, optional): Path to save results
-  models_dir (str, optional): Path to save models
-  audio_path (str, optional): Path to audio file
-  name: Name of the project
-  new (bool): Restarts training
-  load_from (int, optional): Checkpoint number or -1 if loads model from last checkpoint
-  image_size (int, optional): Image size
-  network_capacity (int, optional): Capacity of Network
-  fmap_max (int, optional): Maximum filter size
-  transparent (bool, optional): True for RGBA images and False otherwise
-  attn_layers (int or list(int), optional): Number of attention layers
-  batch_size (int, optional): Batch size
-  gradient_accumulate_every (int, optional): Number of gradient accumulations
-  num_train_steps (int, optional): Number of training steps or epochs
-  learning_rate (float, optional): Learning rate
-  lr_mlp (float, optional): Learning rate multiplier for MLP(Multilayer Perceptron)
-  ttur_mult (float, optional): Learning rate multiplier for Adam optimizer
-  num_workers (int, optional): Number of workers
-  save_every (int, optional): Once in number of steps to save model
-  evaluate_every (int, optional): Once in number of steps to evaluate and save results
-  generate (bool, optional): Whether or not to generate sample images
-  num_generate (int, optional): Number of sample images to be generated
-  generate_interpolation (bool, optional): Whether or not generate images from interpolation
-  interpolation_num_steps (int, optional): Number of interpolation steps
-  save_frames (bool, optional): Whether or not to save frames
-  num_image_tiles (int, optional): Number of image tiles on each side
-  trunc_psi (float, optional): Truncation value
-  mixed_prob (float, optional): Probability for mixed noise
-  no_pl_reg (bool, optional): Whether or not to calculate Perceptual Path Length Regularization
-  aug_prob (float, optional): Augmentation probability for ADA
-  aug_types (list(str), optional): Augmentation types for ADA
-  dataset_aug_prob (float, optional): Augmentation probability for dataset
-  calculate_fid_every (int, optional): Once in number of steps to calculate and save FID score
-  calculate_fid_num_images (int, optional): Number of images for which FID is calculated
-  clear_fid_cache (bool, optional): Clears FID cache
-  sync_audio (bool, optional): Whether or not to sync audio to generated images
-  generate_from_latent (bool, optional): Whether or not to generate images after small uniform changes in latent space
-'''
+## Troubleshooting
+
+1. Often the audio that we get are not the correct `.wav` files so use ffmpeg as follows:
+```
+ffmpeg -i <input_file> ./output.wav
+```
+
+2. In order to get the final music video run ffmpeg as follows:
+```
+# fps   :  30
+# images:  ./samples/part_g1<integer>.png
+# audio:   ./part_g1_30s.wav
+# codec:   libx264
+# output:  ./samples/particle_g1.mp4
+
+ffmpeg -framerate 30 -i ./samples/part_g1%d.png -i ./part_g1_30s.wav -vcodec libx264 ./samples/particle_g1.mp4 -y
 ```

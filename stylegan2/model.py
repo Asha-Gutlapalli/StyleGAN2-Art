@@ -1,26 +1,21 @@
 import os
-from io import StringIO
 import subprocess
-
-from tqdm import tqdm
-
+import numpy as np
 from PIL import Image
+from tqdm import tqdm
 from pathlib import Path
 
-import ffmpeg
-
-import numpy as np
-
 import torch
-import torchvision
 from torchvision import transforms
+from torchvision.utils import make_grid
+from einops.einops import repeat, rearrange
 
 from stylegan2.utils import noise, image_noise, styles_def_to_tensor, evaluate_in_chunks, slerp
 from stylegan2.network import StyleGAN2
 from stylegan2.srgan import Generator
 
 class StyleGAN2Model():
-    def __init__(self, config={}, model_path=None, models_dir='.models', results_dir='.results', upsample=False):
+    def __init__(self, model_path=None, models_dir='.models', results_dir='.results', upsample=False, **config):
 
         self.image_size = config.pop('image_size', 128)
         self.latent_dim = config.pop('latent_dim', 512)
@@ -44,13 +39,15 @@ class StyleGAN2Model():
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # GAN model
-        self.GAN = StyleGAN2(lr_mlp = self.lr_mlp,
-                            image_size = self.image_size,
-                            network_capacity = self.network_capacity,
-                            fmap_max = self.fmap_max,
-                            transparent = self.transparent,
-                            attn_layers = self.attn_layers,
-                            device = self.device)
+        self.GAN = StyleGAN2(
+            lr_mlp = self.lr_mlp,
+            image_size = self.image_size,
+            network_capacity = self.network_capacity,
+            fmap_max = self.fmap_max,
+            transparent = self.transparent,
+            attn_layers = self.attn_layers,
+            device = self.device
+        )
 
         self.models_dir = self.base_dir / models_dir
         (self.models_dir).mkdir(parents=True, exist_ok=True)
@@ -67,8 +64,14 @@ class StyleGAN2Model():
                 subprocess.call(['wget', urls["StyleGAN2"], '-O', model_path])
 
         # load model
-        load_data = torch.load(model_path, map_location=self.device)
+        print("Loading model from ...", model_path)
+        load_data = torch.load(model_path, map_location = self.device)
         self.GAN.load_state_dict(load_data["GAN"])
+        self.num_params = sum(p.numel() for p in self.GAN.parameters())
+
+        # load things for sampling
+        self.gen_n_layers = self.GAN.G.num_layers
+        self.stylevec = self.GAN.S
 
         # automatically upsample if image size less than 256
         if self.image_size < 256:
@@ -122,8 +125,8 @@ class StyleGAN2Model():
     @torch.no_grad()
     def generate_truncated(self, S, G, style, noi, trunc_psi = 0.75, num_image_tiles = 8):
         w = map(lambda t: (S(t[0]), t[1]), style)
-        w_truncated = self.truncate_style_defs(w, trunc_psi = trunc_psi) # [(N, latent_dim), num_layers]
-        w_styles = styles_def_to_tensor(w_truncated) # [N, num_layers, latent_dim]
+        w_truncated = self.truncate_style_defs(w, trunc_psi = trunc_psi) # [(B, latent_dim), num_layers]
+        w_styles = styles_def_to_tensor(w_truncated) # [B, num_layers, latent_dim]
         generated_images = evaluate_in_chunks(self.batch_size, G, w_styles, noi)
         return generated_images.clamp_(0., 1.)
 
@@ -140,9 +143,9 @@ class StyleGAN2Model():
         num_layers = self.GAN.G.num_layers
 
         # latents and noise
-        latents_low = noise(1, latent_dim, device=self.device)
-        latents_high = noise(1, latent_dim, device=self.device)
-        n = image_noise(1, image_size, device=self.device)
+        latents_low = noise(1, latent_dim, device=self.device)  # [1, latent_dim]
+        latents_high = noise(1, latent_dim, device=self.device) # [1, latent_dim]
+        n = image_noise(1, image_size, device=self.device)      # [1, im_size, im_size, 1]
 
         # ratios for SLERP
         if ratios is None:
@@ -151,7 +154,7 @@ class StyleGAN2Model():
         # generates images from interpolated latents
         frames = []
         for ratio in tqdm(ratios):
-            interp_latents = slerp(ratio, latents_low, latents_high)
+            interp_latents = slerp(ratio, latents_low, latents_high) # [1, latent_dim]
             latents = [(interp_latents, num_layers)]
             generated_images = self.generate_truncated(self.GAN.S, self.GAN.G, latents, n, trunc_psi = 0.6)
 
@@ -200,7 +203,6 @@ class StyleGAN2Model():
     # generate images from small uniform changes in latent space
     @torch.no_grad()
     def generate_from_latent(self, name, noise_z, noise):
-
         # noise
         z = noise_z.to(self.device)
         noise = noise.to(self.device)
@@ -226,3 +228,79 @@ class StyleGAN2Model():
         for i, image in enumerate(tqdm(images)):
             pil_image = transforms.ToPILImage()(image.cpu())
             pil_image.save(str(folder_path / f'{str(i)}.jpg'))
+
+
+    @torch.no_grad()
+    def get_image_from_latents(self, z, noise):
+        """get images from given input latent space (z) and noise.
+
+        Args:
+            z (np.ndarray or torch.Tensor): latent space vector with shape [b, latent_dim]
+            noise (np.ndarray or torch.Tensor): base image size with shape [b, image_size, image_size, 1]
+
+        Returns:
+            np.ndarray: output images with shape [b, image_size, image_size, 3]
+        """
+        if isinstance(z, np.ndarray):
+            z = torch.from_numpy(z).float()
+        if isinstance(noise, np.ndarray):
+            noise = torch.from_numpy(noise).float()
+
+        assert isinstance(z, torch.Tensor)
+        assert isinstance(noise, torch.Tensor)
+
+        styles = self.stylevec(z.to(self.device)) # [n, latent_dim]
+        styles = repeat(styles, "b c -> b n c", n = self.gen_n_layers)
+        out = self.GAN.G(styles = styles, input_noise = noise)
+        out.clamp_(0., 1.)
+        out = out.permute((0, 2, 3, 1)).cpu().numpy()
+
+        return out
+
+    @torch.no_grad()
+    def sample(self, n, same_z = False, same_noise = False):
+        """randomly sample `n` images.
+
+        Args:
+            n (int): number of images to generate
+            same_z (bool): use same latent space for all images
+            same_noise (bool): use same image noise for all images
+
+        Returns:
+            np.ndarray: output images with shape [n, image_size, image_size, 3]
+        """
+        if same_z and same_noise and n > 1:
+            raise RuntimeError("same noise and same z will generate same images")
+
+        # randomly create a z and noise vector and pass through the generator to get an image
+        idim = self.image_size
+        if same_z:
+            z = torch.randn(self.latent_dim)
+            z = repeat(z, "c -> n c", n = n)
+        else:
+            z = torch.randn(n, self.latent_dim)
+
+        if same_noise:
+            input_noise_image = torch.randn(idim, idim, 1)
+            input_noise_image = repeat(input_noise_image, "h w c -> n h w c", n = n)
+        else:
+            input_noise_image = torch.randn(n, idim, idim, 1)
+
+        out = self.get_image_from_latents(z, input_noise_image)
+
+        return out
+
+
+# ----- functions
+
+def image_grid(x, n, as_uint8):
+  if not isinstance(x, np.ndarray):
+    x = np.array(x)
+  x = torch.from_numpy(x)
+  x = rearrange(x, "b h w c -> b c h w")
+  g = make_grid(x, n)
+  g = rearrange(g, "c h w -> h w c")
+  g = g.numpy()
+  if as_uint8:
+    g = (g * 255).astype(np.uint8)
+  return g

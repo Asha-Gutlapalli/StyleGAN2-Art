@@ -1,16 +1,11 @@
-import os
 # fire is a python library that automatically generates Command Line Interfaces (CLIs) from any python component
 import fire
-import random
-from random import random
-
 from tqdm import tqdm
-from functools import partial
 
 import torch
 
 from stylegan2.utils import cast_list, audio_features, timestamped_filename
-from stylegan2.network import Trainer
+from stylegan2.train import Trainer
 
 
 # main function
