@@ -3,25 +3,25 @@
 StyleGAN is a Generative Adversarial Network proposed by NVIDIA researchers. It builds upon the [Progressive Growing GAN](https://arxiv.org/pdf/1710.10196.pdf) architecture to produce photo-realistic synthetic images. They have released three research papers regarding this as of June 2021. Their contributions are briefly summarized as follows:
 
 - [StyleGAN](https://arxiv.org/pdf/1812.04948.pdf):
-  - **Bilinear Sampling:** to improve image quality.
-  - **Mapping Network:** transforms latent space to w-space (Intermediate latent space).
-  - **Synthesis Network:** uses [ADA-IN (Adaptive Instance Normalization)](https://arxiv.org/pdf/1703.06868.pdf) to generate images.
-  - **Constant Initial Input:** increases performance. W-space and ADA-IN control generated images anyway.
-  - **Gaussian Noise:** makes the generated image look more realistic by bringing in finer features.
-  - **Mixing Regularization:** performs style mixing where images are generated from two intermediate styles.
-  - **Perceptual Path Length:** measures the difference between successive images when interpolating between two noise inputs.
-  - **Linear Separability:** separates the latent space with a linear hyperplane based on attribute.
+  - **Bilinear Sampling** improves image quality.
+  - **Mapping Network** transforms latent space to w-space (Intermediate latent space).
+  - **Synthesis Network** uses [ADA-IN (Adaptive Instance Normalization)](https://arxiv.org/pdf/1703.06868.pdf) to generate images.
+  - **Constant Initial Input** increases performance. W-space and ADA-IN control generated images anyway.
+  - **Gaussian Noise** makes the generated image look more realistic by bringing in finer features.
+  - **Mixing Regularization** performs style mixing where images are generated from two intermediate styles.
+  - **Perceptual Path Length** measures the difference between successive images when interpolating between two noise inputs.
+  - **Linear Separability** separates the latent space with a linear hyperplane based on attribute.
 
   <p align="center">
     <img src="./diags/StyleGAN-Architecture.png">
   </p>
 
 - [StyleGAN2](https://arxiv.org/pdf/1912.04958.pdf):
-  - **Weight Demodulation:** removes the droplet artifacts that were in the original StyleGAN.
-  - **Lazy Regularization:** alleviates heavy memory usage and computation cost of regularization.
-  - **Perceptual Path Length Regularization:** encourages smooth mapping from latent space to generated image to achieve feature disentanglement.
-  - **No Growing:** replaces Progressive Growing GAN architecture to prevent phase artifacts with skip connections in the generator and residual connections in the discriminator.
-  - **Large Networks:** yield better results where high-resolution images have more influence.
+  - **Weight Demodulation** removes the droplet artifacts that were in the original StyleGAN.
+  - **Lazy Regularization** alleviates heavy memory usage and computation cost of regularization.
+  - **Perceptual Path Length Regularization** encourages smooth mapping from latent space to generated image to achieve feature disentanglement.
+  - **No Growing** replaces Progressive Growing GAN architecture to prevent phase artifacts with skip connections in the generator and residual connections in the discriminator.
+  - **Large Networks** yield better results where high-resolution images have more influence.
 
   <p align="center">
     <img src="./diags/StyleGAN2-Architecture(1).png">
@@ -29,7 +29,7 @@ StyleGAN is a Generative Adversarial Network proposed by NVIDIA researchers. It 
   </p>
 
 - [StyleGAN2-ADA](https://arxiv.org/pdf/2006.06676.pdf):
-  - **Adaptive Discrimator Augmentation:** augments the data given to the discriminator to overcome overfitting without the augmentations leaking into generated images.
+  - **Adaptive Discrimator Augmentation** augments the data given to the discriminator to overcome overfitting without the augmentations leaking into generated images.
 
   <p align="center">
     <img src="./diags/StyleGAN2-ADA-Architecture.png">
